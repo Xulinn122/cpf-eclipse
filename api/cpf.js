@@ -3,85 +3,96 @@ export default async function handler(req, res) {
     if (!q) return res.status(400).json({ erro: "Faltando parâmetro ?q=" });
 
     try {
-        const url = `https://apis-brasil.shop/apis/apiserasacpf2025.php?cpf={encodeURIComponent(q)}`;
+        const url = `https://apis-brasil.shop/apis/apiserasacpf2025.php?cpf=${encodeURIComponent(q)}`;
         const response = await fetch(url);
         const data = await response.json();
 
-        if (!data || !data.items) {
+        if (!data || !data.DADOS) {
             return res.status(404).json({ erro: "Nenhum resultado encontrado." });
         }
 
-        const resultados = data.items.map((pessoa) => ({
-            // === DADOS PRINCIPAIS ===
-            nome: pessoa.name,
-            data_nascimento: pessoa.birthday,
-            idade: pessoa.age,
-            signo: pessoa.zodiac,
-            cpf: pessoa.document,
-            sexo: pessoa.gender,
-            estado_civil: pessoa.civilStatus || null,
-            escolaridade: pessoa.degreeEducation,
-            nome_mae: pessoa.motherName,
-            nome_pai: pessoa.fatherName,
+        const pessoa = data.DADOS;
 
-            // === EMAILS (ARRAY COMPLETO) ===
-            emails: pessoa.emails?.map(e => ({
-                email: e.email,
-                prioridade: e.priority,
-                score: e.score,
-                pessoal: e.personal,
-                duplicado: e.duplicated,
-                blacklist: e.blacklist,
-                dominio: e.domain,
-                data_inclusao: e.inclusionDate
-            })) || [],
+        // === FORMATAR RESULTADO ===
+        const resultado = {
+            nome: pessoa.NOME,
+            cpf: pessoa.CPF,
+            sexo: pessoa.SEXO,
+            nascimento: pessoa.NASC,
+            nome_mae: pessoa.NOME_MAE,
+            nome_pai: pessoa.NOME_PAI,
+            estado_civil: pessoa.ESTCIV,
+            rg: pessoa.RG || null,
+            renda: pessoa.RENDA || null,
 
-            quantidade_emails: pessoa.emails?.length || 0,
+            // EMAILS
+            emails: (data.EMAIL || []).map(e => ({
+                email: e.EMAIL,
+                prioridade: e.PRIORIDADE,
+                score: e.EMAIL_SCORE,
+                pessoal: e.EMAIL_PESSOAL,
+                duplicado: e.EMAIL_DUPLICADO,
+                blacklist: e.BLACKLIST,
+                dominio: e.DOMINIO,
+                data_inclusao: e.DT_INCLUSAO
+            })),
+            quantidade_emails: (data.EMAIL || []).length,
 
-            // === ENDEREÇOS (LISTA COMPLETA) ===
-            enderecos: pessoa.addresses?.map(end => ({
-                tipo: end.type,
-                logradouro: end.street,
-                numero: end.number,
-                complemento: end.complement,
-                bairro: end.neighborhood,
-                cidade: end.city,
-                uf: end.state,
-                cep: end.zipcode,
-                atualizado_em: end.updatedAt,
-                adicionado_em: end.createdAt
-            })) || [],
+            // TELEFONES
+            telefones: data.TELEFONE || [],
+            quantidade_telefones: (data.TELEFONE || []).length,
 
-            quantidade_enderecos: pessoa.addresses?.length || 0,
+            // ENDEREÇOS
+            enderecos: (data.ENDERECOS || []).map(end => ({
+                tipo: end.LOGR_TIPO,
+                logradouro: end.LOGR_NOME,
+                numero: end.LOGR_NUMERO,
+                complemento: end.LOGR_COMPLEMENTO,
+                bairro: end.BAIRRO,
+                cidade: end.CIDADE,
+                uf: end.UF,
+                cep: end.CEP,
+                atualizado: end.DT_ATUALIZACAO,
+                incluido: end.DT_INCLUSAO
+            })),
+            quantidade_enderecos: (data.ENDERECOS || []).length,
 
-            // === TELEFONE PRINCIPAL ===
-            telefone_principal: pessoa.mainPhone ? {
-                numero: pessoa.mainPhone.number,
-                whatsapp: pessoa.mainPhone.isWhatsApp,
-                cidade: pessoa.mainPhone.city,
-                uf: pessoa.mainPhone.regionAbreviation,
-                tipo: pessoa.mainPhone.type,
-                operadora: pessoa.mainPhone.carrier,
-                atualizado_em: pessoa.mainPhone.updatedAt
-            } : null,
+            // SCORE SERASA/AQUISIÇÃO
+            score: (data.SCORE || []).map(s => ({
+                csb8: s.CSB8,
+                faixa_csb8: s.CSB8_FAIXA,
+                csba: s.CSBA,
+                faixa_csba: s.CSBA_FAIXA
+            })),
 
-            // === SCORES ===
-            score: pessoa.score ? [{
-                csb8: pessoa.score.csb8,
-                faixa_csb8: pessoa.score.csb8Range,
-                csba: pessoa.score.csba,
-                faixa_csba: pessoa.score.csbaRange
-            }] : [],
+            // MOSAIC
+            mosaic: {
+                primario: pessoa.CD_MOSAIC || null,
+                novo: pessoa.CD_MOSAIC_NOVO || null,
+                secundario: pessoa.CD_MOSAIC_SECUNDARIO || null
+            },
+            mosaic_resumido: pessoa.CD_MOSAIC
+                ? `${pessoa.CD_MOSAIC}/${pessoa.CD_MOSAIC_NOVO}`
+                : null,
 
-            // === MOSAIC ===
-            mosaic: pessoa.mosaic ? {
-                primario: pessoa.mosaic.primary,
-                secundario: pessoa.mosaic.secondary,
-                novo: pessoa.mosaic.new
-            } : null,
+            // PARENTES
+            parentes: (data.PARENTES || []).map(p => ({
+                nome: p.NOME,
+                nome_vinculo: p.NOME_VINCULO,
+                vinculo: p.VINCULO
+            }))
+        };
 
-            mosaic_resumido: pessoa.mosaic
-                ? `${pessoa.mosaic.primary}/${pessoa.mosaic.new}`
+        return res.status(200).json(resultado);
+
+    } catch (error) {
+        res.status(500).json({
+            erro: "Falha ao consultar API externa.",
+            detalhe: error.message
+        });
+    }
+}
+soa.mosaic.new}`
                 : null,
 
             // === PARENTES ===
