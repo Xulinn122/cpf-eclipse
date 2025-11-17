@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
     if (!cpf) {
         return res.status(400).json({
-            erro: "Envie ?cpf=00000000000"
+            erro: "bota a quey doidao ?cpf=00000000000"
         });
     }
 
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (!data || !data.DADOS) {
-            return res.status(404).json({ erro: "CPF não encontrado" });
+            return res.status(404).json({ erro: "CPF não encontradokkk" });
         }
 
         // ================================
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
         // 🔥 RESPOSTA FINAL CUSTOMIZADA
         // ================================
         res.status(200).json({
-            status: "ok",
+            status: "true",
             consultado: cpf,
             pessoa,
             emails,
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
         res.status(500).json({
-            erro: "Falha ao consultar API",
+            erro: "Falha ao consultar API, acesso negado.",
             detalhe: String(error)
         });
     }
