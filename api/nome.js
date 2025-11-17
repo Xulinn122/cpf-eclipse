@@ -13,24 +13,48 @@ export default async function handler(req, res) {
 
         const resultados = data.items.map((pessoa) => ({
             nome: pessoa.name,
-            data_nascimento: pessoa.birthday,
-            idade: pessoa.age,
-            signo: pessoa.zodiac,
             cpf: pessoa.document,
-            escolaridade: pessoa.degreeEducation,
+            rg: pessoa.rg || null,
+            cns: pessoa.cns || null,
+            sexo: pessoa.gender || null,
+            signo: pessoa.zodiac,
+            idade: pessoa.age,
+            data_nascimento: pessoa.birthday,
+
+            nacionalidade: pessoa.nationality || null,
+            escolaridade: pessoa.degreeEducation || null,
+
             nome_mae: pessoa.motherName,
             nome_pai: pessoa.fatherName,
+
+            profissao: pessoa.cboName || null,
+            cbo: pessoa.cbo || null,
+            titulo_eleitor: pessoa.voterRegistration || null,
+
             telefone_principal: pessoa.mainPhone ? {
                 numero: pessoa.mainPhone.number,
                 whatsapp: pessoa.mainPhone.isWhatsApp,
-                cidade: pessoa.mainPhone.city,
-                uf: pessoa.mainPhone.regionAbreviation
-            } : null
+                endereco: pessoa.mainPhone.address
+                    ? `${pessoa.mainPhone.address}, ${pessoa.mainPhone.addressNumber || ""}`.trim()
+                    : null,
+                bairro: pessoa.mainPhone.neighborhood || null,
+                cidade: pessoa.mainPhone.city || null,
+                uf: pessoa.mainPhone.regionAbreviation || null,
+                cep: pessoa.mainPhone.zipCode || null
+            } : null,
+
+            quantidade_enderecos: pessoa.totalAddress || 0,
+            quantidade_emails: pessoa.totalEmails || 0,
+            quantidade_telefones: pessoa.totalPhone || 0,
+            quantidade_socios: pessoa.totalBusinessAssociate || 0,
+            quantidade_outros_contatos: pessoa.totalOthersContact || 0
         }));
 
         res.status(200).json({
+            status: "true",
+            consultado: q,
             proximo: data.hasNext || false,
-            total: data.total,
+            total: data.total || resultados.length,
             resultados
         });
 
@@ -41,32 +65,7 @@ export default async function handler(req, res) {
         });
     }
 }
-essoa.mainPhone.isWhatsApp,
-                    endereco: pessoa.mainPhone.address
-                        ? `${pessoa.mainPhone.address}, ${pessoa.mainPhone.addressNumber || ""}`.trim()
-                        : null,
-                    bairro: pessoa.mainPhone.neighborhood || null,
-                    cidade: pessoa.mainPhone.city || null,
-                    uf: pessoa.mainPhone.regionAbreviation || null,
-                    cep: pessoa.mainPhone.zipCode || null
-                }
-                : null,
-
-            quantidade_enderecos: pessoa.totalAddress || 0,
-            quantidade_emails: pessoa.totalEmails || 0,
-            quantidade_telefones: pessoa.totalPhone || 0,
-            quantidade_socios: pessoa.totalBusinessAssociate || 0,
-            quantidade_outros_contatos: pessoa.totalOthersContact || 0
-        }));
-
-        res.json({
-            proximo: data.hasNext || false,
-            total: data.total || resultados.length,
-            resultados
-        });
-
-    } catch (e) {
-        console.error(e);
+r(e);
         res.status(500).json({ erro: "Falha ao consultar API externa." });
     }
 });

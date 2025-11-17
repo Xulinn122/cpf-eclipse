@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     if (!q) return res.status(400).json({ erro: "Faltando parâmetro ?q=" });
 
     try {
-        const url = `https://mdzapis.com/api/newss2/nome/${encodeURIComponent(q)}?apikey=Nekro`;
+        const url = `https://apis-brasil.shop/apis/apiserasacpf2025.php?cpf={encodeURIComponent(q)}`;
         const response = await fetch(url);
         const data = await response.json();
 
