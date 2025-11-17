@@ -1,11 +1,9 @@
-import fetch from "node-fetch";
-
 export default async function handler(req, res) {
     const cpf = req.query.cpf;
 
     if (!cpf) {
         return res.status(400).json({
-            erro: "bota a quey doidao ?cpf=00000000000"
+            erro: "bota a query doidão ?cpf=00000000000"
         });
     }
 
@@ -15,12 +13,9 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (!data || !data.DADOS) {
-            return res.status(404).json({ erro: "CPF não encontradokkk" });
+            return res.status(404).json({ erro: "CPF não encontrado kkk" });
         }
 
-        // ================================
-        // 🔥 ORGANIZAÇÃO MELHORADA
-        // ================================
         const pessoa = {
             cpf: data.DADOS.CPF,
             nome: data.DADOS.NOME,
@@ -39,7 +34,7 @@ export default async function handler(req, res) {
             }
         };
 
-        const emails = data.EMAIL.map(e => ({
+        const emails = data.EMAIL?.map(e => ({
             email: e.EMAIL,
             prioridade: e.PRIORIDADE,
             score: e.EMAIL_SCORE,
@@ -48,9 +43,9 @@ export default async function handler(req, res) {
             blacklist: e.BLACKLIST,
             dominio: e.DOMINIO,
             data_inclusao: e.DT_INCLUSAO
-        }));
+        })) || [];
 
-        const enderecos = data.ENDERECOS.map(e => ({
+        const enderecos = data.ENDERECOS?.map(e => ({
             tipo: e.LOGR_TIPO || "",
             logradouro: e.LOGR_NOME,
             numero: e.LOGR_NUMERO,
@@ -61,24 +56,21 @@ export default async function handler(req, res) {
             cep: e.CEP,
             atualizado_em: e.DT_ATUALIZACAO,
             adicionado_em: e.DT_INCLUSAO
-        }));
+        })) || [];
 
-        const score = data.SCORE.map(s => ({
+        const score = data.SCORE?.map(s => ({
             csb8: s.CSB8,
             faixa_csb8: s.CSB8_FAIXA,
             csba: s.CSBA,
             faixa_csba: s.CSBA_FAIXA
-        }));
+        })) || [];
 
-        const parentes = data.PARENTES.map(p => ({
+        const parentes = data.PARENTES?.map(p => ({
             nome: p.NOME,
             nome_vinculo: p.NOME_VINCULO,
             vinculo: p.VINCULO
-        }));
+        })) || [];
 
-        // ================================
-        // 🔥 RESPOSTA FINAL CUSTOMIZADA
-        // ================================
         res.status(200).json({
             status: "true",
             consultado: cpf,
@@ -90,6 +82,16 @@ export default async function handler(req, res) {
             quantidade_enderecos: enderecos.length,
             quantidade_emails: emails.length,
             mosaic_resumido: `${data.DADOS.CD_MOSAIC}/${data.DADOS.CD_MOSAIC_NOVO}`
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            erro: "Falha ao consultar API, deu ruim interno.",
+            detalhe: error.message
+        });
+    }
+}
+     mosaic_resumido: `${data.DADOS.CD_MOSAIC}/${data.DADOS.CD_MOSAIC_NOVO}`
         });
 
     } catch (error) {
