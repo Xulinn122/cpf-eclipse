@@ -1,35 +1,47 @@
 export default async function handler(req, res) {
-    const q = req.query.q;
-    if (!q) return res.status(400).json({ erro: "Faltando parâmetro ?q=" });
+  try {
+    const { nome } = req.query;
 
-    try {
-        const url = `https://mdzapis.com/api/newss2/nome/${encodeURIComponent(q)}?apikey=Nekro`;
-        const response = await fetch(url);
-        const data = await response.json();
+    if (!nome) {
+      return res.status(400).json({ error: "Informe ?nome=FULANO" });
+    }
 
-        if (!data || !data.items) {
-            return res.status(404).json({ erro: "Nenhum resultado encontrado." });
-        }
+    const url = `https://mdzapis.com/api/newss2/nome/${encodeURIComponent(nome)}?apikey=Nekro`;
+    const data = await fetch(url).then(r => r.json());
 
-        const resultados = data.items.map((pessoa) => ({
-            nome: pessoa.name,
-            cpf: pessoa.document,
-            rg: pessoa.rg || null,
-            cns: pessoa.cns || null,
-            sexo: pessoa.gender || null,
-            signo: pessoa.zodiac,
-            idade: pessoa.age,
-            data_nascimento: pessoa.birthday,
+    let hasNext = data.hasNext;
 
-            nacionalidade: pessoa.nationality || null,
-            escolaridade: pessoa.degreeEducation || null,
+    // corrigir bug: tem items > 0 mas hasNext veio false
+    if (data.items?.length > 0 && data.total > data.items.length) {
+      hasNext = true;
+    }
 
-            nome_mae: pessoa.motherName,
-            nome_pai: pessoa.fatherName,
+    const pessoas = (data.items || []).map(p => ({
+      nome: p.name,
+      nascimento: p.birthday,
+      idade: p.age,
+      signo: p.zodiac,
+      cpf: p.document,
+      mae: p.motherName,
+      pai: p.fatherName || null,
+      escolaridade: p.degreeEducation,
+      cidade: p.mainPhone?.city || null,
+      estado: p.mainPhone?.regionAbreviation || null,
+      telefone: p.mainPhone?.number || null
+    }));
 
-            profissao: pessoa.cboName || null,
-            cbo: pessoa.cbo || null,
-            titulo_eleitor: pessoa.voterRegistration || null,
+    return res.status(200).json({
+      ok: true,
+      hasNext,
+      total: data.total,
+      resultados: pessoas
+    });
+
+  } catch (err) {
+    return res.status(500).json({ error: "Erro interno", details: err.message });
+  }
+}
+,
 
             telefone_principal: pessoa.mainPhone ? {
                 numero: pessoa.mainPhone.number,
