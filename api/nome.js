@@ -81,5 +81,3 @@ r(e);
         res.status(500).json({ erro: "Falha ao consultar API externa." });
     }
 });
-
-module.exports = router;
